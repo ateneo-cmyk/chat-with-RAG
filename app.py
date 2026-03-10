@@ -1,11 +1,39 @@
 import cohere
 import streamlit as st
 import numpy as np
+import PyPDF2
 
 # Configuración de la interfaz
 st.set_page_config(page_title="Mi RAG con Cohere", layout="wide")
 st.title("📚 Chat con mis Documentos (RAG)")
 
+
+#subir pdfs para el sistema rag
+with st.sidebar:
+    st.header("sube un archivo")
+    archivo_subido = st.file_uploader("Sube un archivo PDF", type ="pdf")
+    
+    documentos_cohere = []
+    
+    if archivo_subido is not None:
+        with st.spinner("Leyendo pdf..."):
+           #Leer el PDF
+           lector_pdf = PyPDF2.PdfReader(archivo_subido)
+           texto_completo = ""
+           
+           for pagina in lector_pdf.pages:
+               texto_completo +=pagina.extract_text() + "\n"
+           
+        #Dividir el texto en fragmentos (chunks) para cohere
+        fragmentos = texto_completo.split('\n\n')
+        
+        for i, fragmentos in enumerate(fragmentos):
+          if len(fragmentos.strip()) > 20:
+              documentos_cohere.append({
+                  "id": f"frag_{i}",
+                  "text": fragmentos.strip()
+              })
+        st.success(f"¡PDF procesado! Se extrajeron {len(documentos_cohere)} fragmentos.")
 # --- CONFIGURACIÓN DE SEGURIDAD ---
 # Intentamos obtener la clave desde secrets de Streamlit
 try:
@@ -44,7 +72,8 @@ if prompt := st.chat_input("¿En qué puedo ayudarte?"):
                 response = client.chat(
                     message=prompt,
                     chat_history=history,
-                    model="command-r-plus" 
+                    model="command-a-03-2025",
+                    documents=documentos_cohere if documentos_cohere else None 
                 )
                 
                 answer = response.text
@@ -55,3 +84,5 @@ if prompt := st.chat_input("¿En qué puedo ayudarte?"):
                 
             except Exception as e:
                 st.error(f"Error en la comunicación con la IA: {e}")
+                
+                
