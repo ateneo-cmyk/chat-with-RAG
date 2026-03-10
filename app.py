@@ -35,7 +35,7 @@ with st.sidebar:
               })
         st.success(f"¡PDF procesado! Se extrajeron {len(documentos_cohere)} fragmentos.")
 # --- CONFIGURACIÓN DE SEGURIDAD ---
-# Intentamos obtener la clave desde secrets de Streamlit
+#obtener la clave desde secrets de Streamlit
 try:
     api_key = st.secrets["COHERE_API_KEY"]
     client = cohere.Client(api_key)
@@ -54,16 +54,16 @@ for message in st.session_state.messages:
 
 # --- INTERACCIÓN ---
 if prompt := st.chat_input("¿En qué puedo ayudarte?"):
-    # 1. Guardar y mostrar mensaje del usuario
+    #Guardar y mostrar mensaje del usuario
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # 2. Generar respuesta del asistente
+    #Generar respuesta del asistente
     with st.chat_message("assistant"):
         with st.spinner("Pensando..."):
             try:
-                # Preparamos el historial en el formato exacto que pide la API de Cohere
+                #historial en el formato exacto que pide la API de Cohere
                 history = [
                     {"role": m["role"].upper() if m["role"] != "assistant" else "CHATBOT", "message": m["content"]} 
                     for m in st.session_state.messages[:-1]
@@ -79,7 +79,7 @@ if prompt := st.chat_input("¿En qué puedo ayudarte?"):
                 answer = response.text
                 st.markdown(answer)
                 
-                # 3. Guardar solo el texto de la respuesta en el historial
+                #Guardar solo el texto de la respuesta en el historial
                 st.session_state.messages.append({"role": "assistant", "content": answer})
                 
             except Exception as e:
